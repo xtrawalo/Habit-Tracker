@@ -1,4 +1,6 @@
 import csv
+import datetime
+
 answer = 0
 choice = 0
 
@@ -12,10 +14,10 @@ def Home():
     print("6. Exit\n")
     while True:
         try:
-            answer = int(input("Choose a menu (1-6)"))
+            answer = int(input("Choose a menu (1-6) : "))
             if answer<1 or answer>6:
                 print("Invalid Number")
-                choice = int(input("Choose a menu (1-6)"))
+                choice = int(input("Choose a menu (1-6) : "))
             else:
                 break
         except ValueError:
@@ -32,10 +34,10 @@ def Dashboard():
     print("O. Return\n")
     while True:
         try:
-            choice = int(input("Choose a menu (0-5)"))
+            choice = int(input("Choose a menu (0-5) : "))
             if choice<0 or choice>5:
                 print("Invalid Number")
-                choice = int(input("Choose a menu (0-5)"))
+                choice = int(input("Choose a menu (0-5) : "))
             else:
                 break
         except ValueError:
@@ -54,15 +56,84 @@ def Habits():
     print("0. Return\n")
     while True:
         try:
-            choice = int(input("Choose a menu (0-6)"))
+            choice = int(input("Choose a menu (0-6) : "))
             if choice<0 or choice>6:
                 print("Invalid Number")
-                choice = int(input("Choose a menu (0-6)"))
+                choice = int(input("Choose a menu (0-6) : "))
             else:
                 break
         except ValueError:
             print("Invalid Number")
     return choice
+
+def AllHabits():
+    FileName = "Habits.csv"
+    AccessMode = "r"
+    HabitsData = []
+    with open(FileName, AccessMode) as MyFile:
+        HabitsData = csv.reader(MyFile)
+        print(HabitsData)
+    return
+
+def AddHabit():
+    FileName = "Habits.csv"
+    AccessMode = "a"
+    MyFile = open(FileName,AccessMode)
+    Habits = ["Study", "Fitness", "Health", "Work", "Personal"]
+    Frequency = ["Daily", "Weekly"]
+    Habit = input("Ener a new Habit : ")
+    while True:
+        try:
+            if "," in Habit:
+                print("Invalid Habit")
+                Habit = input("Ener a new Habit (no commas) : ")
+            else:
+                break
+        except:
+            print("Invalid number")
+
+
+    for i in range(len(Habits)):
+        print(f"{i}. {Habits[i]}")
+    while True:
+        try:
+            Category = int(input("Choose a category(0-5) : "))
+            if Category<0 or Category>5:
+                print("Invalid number")
+                Category = input("Choose a category(0-5) : ")
+            else:
+                break
+        except:
+            print("Invalid number")
+    for i in range(len(Habits)):
+        if Category == i:
+            Category = Habits[i]
+    print(f"{Category}\n")
+
+    for i in range(len(Frequency)):
+        print(f"{i}. {Frequency[i]}")
+    while True:
+        try:
+            Freq = int(input("Choose a Frequency(0-1) : "))
+            if Freq<0 or Freq>1:
+                print("Invalid number")
+                Freq = input("Choose a frequency(0-1) : ")
+            else:
+                break
+        except:
+            print("Invalid number")
+
+    for i in range(len(Frequency)):
+        if Freq == i:
+            Freq = Frequency[i]
+    print(f"{Freq}\n")
+
+    CurrentDate = datetime.date.today()
+    
+    print(f"{Habit},{Category},{Freq},{CurrentDate},Unknown")
+    MyFile.write("")
+
+    return
 
 def Calendar():
     print("=================================== \n             CALENDAR               \n=================================== \n" )
@@ -73,10 +144,10 @@ def Calendar():
     print("0. Return\n")
     while True:
         try:
-            choice = int(input("Choose a menu (0-4)"))
+            choice = int(input("Choose a menu (0-4) : "))
             if choice<0 or choice>4:
                 print("Invalid Number")
-                choice = int(input("Choose a menu (0-4)"))
+                choice = int(input("Choose a menu (0-4) : "))
             else:
                 break
         except ValueError:
@@ -93,10 +164,10 @@ def Statistics():
     print("0. Return\n")
     while True:
         try:
-            choice = int(input("Choose a menu (0-5)"))
+            choice = int(input("Choose a menu (0-5) : "))
             if choice<0 or choice>5:
                 print("Invalid Number")
-                choice = int(input("Choose a menu (0-5)"))
+                choice = int(input("Choose a menu (0-5) : "))
             else:
                 break
         except ValueError:
@@ -113,10 +184,10 @@ def Achievements():
     print("0. Return\n")    
     while True:
         try:
-            choice = int(input("Choose a menu (0-5)"))
+            choice = int(input("Choose a menu (0-5) : "))
             if choice<0 or choice>5:
                 print("Invalid Number")
-                choice = int(input("Choose a menu (0-5)"))
+                choice = int(input("Choose a menu (0-5) : "))
             else:
                 break
         except ValueError:
@@ -127,23 +198,27 @@ answer = Home()
 print(answer)
 while True:
     if answer == 1:
-        choice == Dashboard()
+        choice = Dashboard()
         if choice == 0:
             Home()
     if answer == 2:
-        choice == Habits ()
+        choice = Habits ()
         if choice == 0:
             Home()
+        elif choice == 1:
+            AllHabits()
+        elif choice == 2:
+            AddHabit()
     if answer == 3:
-        choice == Calendar()
+        choice = Calendar()
         if choice == 0:
             Home()
     if answer == 4:
-        choice == Statistics()
+        choice = Statistics()
         if choice == 0:
             Home()
     if answer == 5:
-        choice == Achievements()
+        choice = Achievements()
         if choice == 0:
             Home()
     if answer == 6:
