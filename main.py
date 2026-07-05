@@ -69,13 +69,21 @@ def Habits():
 def AllHabits():
     FileName = "Habits.csv"
     AccessMode = "r"
-    HabitsData = []
+    Habits = []
     with open(FileName, AccessMode) as MyFile:
-        HabitsData = csv.reader(MyFile)
-        print(HabitsData)
+        reader = csv.DictReader(MyFile)
+        for Habit in reader:
+            Habits.append(Habit)
+            if Habit['status'] == 'active':
+                print(f"{Habit['id']}. {Habit['name']}({Habit['category']})")
+    if not Habits:
+        print("There are no habits currently")
+    exit = input('Enter anything to continue : ')
+    if exit :
+        pass
     return
 
-def AddHabit():
+def AddHabit(): 
     FileName = "Habits.csv"
     AccessMode = "a"
     MyFile = open(FileName,AccessMode)
@@ -92,7 +100,7 @@ def AddHabit():
         except:
             print("Invalid number")
 
-
+    print('\nCategory:')
     for i in range(len(Habits)):
         print(f"{i}. {Habits[i]}")
     while True:
@@ -108,8 +116,9 @@ def AddHabit():
     for i in range(len(Habits)):
         if Category == i:
             Category = Habits[i]
-    print(f"{Category}\n")
+    print(f"{Category}")
 
+    print('\nFrequency:')
     for i in range(len(Frequency)):
         print(f"{i}. {Frequency[i]}")
     while True:
@@ -117,7 +126,7 @@ def AddHabit():
             Freq = int(input("Choose a Frequency(0-1) : "))
             if Freq<0 or Freq>1:
                 print("Invalid number")
-                Freq = input("Choose a frequency(0-1) : ")
+                Freq = int(input("Choose a Frequency(0-1) : "))
             else:
                 break
         except:
@@ -130,9 +139,69 @@ def AddHabit():
 
     CurrentDate = datetime.date.today()
     
-    print(f"{Habit},{Category},{Freq},{CurrentDate},Unknown")
-    MyFile.write("")
+    print("Habit added successfully")
+    MyFile.write(f"{Habit},{Category},{Freq},{CurrentDate},active\n")
+    MyFile.close()
 
+    exit = input('Enter anything to continue : ')
+    if exit :
+        pass
+
+    return
+
+def DeleteHabit():
+    FileName = "Habits.csv"
+    AccessMode = "r"
+    Habits = []
+    with open(FileName, AccessMode) as MyFile:
+        reader = csv.DictReader(MyFile)
+        Habits = []
+        Active = []
+        for Habit in reader:
+            Habits.append(Habit)
+            if Habit['status'] == 'active':
+                print(f"{Habit['id']}. {Habit['name']}({Habit['category']})")
+                Active.append(Habit)
+    if not Active:
+        print("There are no habits currently")
+        exit = input('Enter anything to continue : ')
+        if exit :
+            pass
+        return
+    
+    found = False
+    while True:
+        try:
+            choice = int(input(f"Enter habit ID to delete : "))
+            found = False
+            for Habit in Active:
+                if int(Habit['id']) == choice:
+                    found = True
+                    break
+            if not found:
+                print("Invalid ID")
+            if found:
+                break
+        except ValueError:
+            print("Invalid ID")
+
+    for Habit in Habits:
+        if int(Habit['id']) == choice:
+            Habit['status'] = 'inactive'
+            break
+
+    print("Habit deleted successfully!")
+
+    AccessMode = "w"
+    MyFile = open(FileName, AccessMode)
+    MyFile.write("id,name,category,frequency,created_date,status\n")
+    for Habit in Habits:
+        MyFile.write(f"{Habit['id']},{Habit['name']},{Habit['category']},{Habit['frequency']},{Habit['created_date']},{Habit['status']}\n")
+    MyFile.close()
+
+    exit = input('Enter anything to continue : ')
+    if exit :
+        pass
     return
 
 def Calendar():
