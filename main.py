@@ -73,18 +73,29 @@ def AllHabits():
     with open(FileName, AccessMode) as MyFile:
         reader = csv.DictReader(MyFile)
         for Habit in reader:
-            Habits.append(Habit)
             if Habit['status'] == 'active':
+                Habits.append(Habit)
                 print(f"{Habit['id']}. {Habit['name']}({Habit['category']})")
     if not Habits:
         print("There are no habits currently")
-    exit = input('Enter anything to continue : ')
-    if exit :
-        pass
+    input("Press Enter to continue...")
     return
 
 def AddHabit(): 
     FileName = "Habits.csv"
+    AccessMode = "r"
+    new_id = 1
+    with open(FileName, AccessMode) as MyFile:
+        reader = csv.DictReader(MyFile)
+        Habits = []
+        IDs = []
+        for Habit in reader:
+            Habits.append(Habit)
+            IDs.append(int(Habit['id']))
+    if IDs:
+        new_id = max(IDs) + 1
+    
+        
     AccessMode = "a"
     MyFile = open(FileName,AccessMode)
     Habits = ["Study", "Fitness", "Health", "Work", "Personal"]
@@ -140,12 +151,10 @@ def AddHabit():
     CurrentDate = datetime.date.today()
     
     print("Habit added successfully")
-    MyFile.write(f"{Habit},{Category},{Freq},{CurrentDate},active\n")
+    MyFile.write(f"{new_id},{Habit},{Category},{Freq},{CurrentDate},active\n")
     MyFile.close()
 
-    exit = input('Enter anything to continue : ')
-    if exit :
-        pass
+    input("Press Enter to continue...")
 
     return
 
@@ -164,9 +173,7 @@ def DeleteHabit():
                 Active.append(Habit)
     if not Active:
         print("There are no habits currently")
-        exit = input('Enter anything to continue : ')
-        if exit :
-            pass
+        input("Press Enter to continue...")
         return
     
     found = False
@@ -199,9 +206,33 @@ def DeleteHabit():
         MyFile.write(f"{Habit['id']},{Habit['name']},{Habit['category']},{Habit['frequency']},{Habit['created_date']},{Habit['status']}\n")
     MyFile.close()
 
-    exit = input('Enter anything to continue : ')
-    if exit :
-        pass
+    input("Press Enter to continue...")
+    return
+
+def Categorys():
+    FileName = 'Habits.csv'
+    AccessMode = 'r'
+    Categories = {
+        'Study' : [],
+        'Fitness' : [],
+        'Health' : [],
+        'Work' : [],
+        'Personal' : []}
+
+    with open(FileName, AccessMode) as MyFile:
+        reader = csv.DictReader(MyFile)
+        for Habit in reader:
+            if Habit['status'] == 'active':
+                Categories[Habit['category']].append(Habit["name"])
+    if not any(Categories.values()):
+        print("There are no habits currently")
+        input("Press Enter to continue...")
+        return
+    
+    for category, habits in Categories.items():
+        if habits:
+            print(f"{category}: {','.join(habits)}")
+    input("Press Enter to continue...")
     return
 
 def Calendar():
@@ -278,6 +309,10 @@ while True:
             AllHabits()
         elif choice == 2:
             AddHabit()
+        elif choice == 3:
+            DeleteHabit()
+        elif choice == 5:
+            Categorys()
     if answer == 3:
         choice = Calendar()
         if choice == 0:
@@ -292,5 +327,3 @@ while True:
             Home()
     if answer == 6:
         break
-
-
