@@ -3,6 +3,8 @@ import datetime
 
 answer = 0
 choice = 0
+CurrentDate = datetime.date.today()
+
 
 def Home():
     print("=================================== \n           HABIT TRACKER            \n=================================== \n" )
@@ -26,18 +28,17 @@ def Home():
 
 def Dashboard():
     print("=================================== \n             DASHBOARD              \n=================================== \n" )
-    print("1. Today's Progress")
-    print("2. Habits Due Today")
-    print("3. Current Streak")
-    print("4. Quick Stats")
-    print("5. Recent Activity")
+    
+    print(f"Today: {CurrentDate}")
+    print("Quick Stats")
+    
+    print("1. Mark Habit Complete")
     print("O. Return\n")
     while True:
         try:
-            choice = int(input("Choose a menu (0-5) : "))
-            if choice<0 or choice>5:
+            choice = int(input("Choose a menu (0-1) : "))
+            if choice<0 or choice>1:
                 print("Invalid Number")
-                choice = int(input("Choose a menu (0-5) : "))
             else:
                 break
         except ValueError:
@@ -52,14 +53,13 @@ def Habits():
     print("3. Delete Habit")
     print("4. Edit Habit")
     print("5. Categories")
-    print("6. Completed Today")
     print("0. Return\n")
     while True:
         try:
-            choice = int(input("Choose a menu (0-6) : "))
+            choice = int(input("Choose a menu (0-5) : "))
             if choice<0 or choice>6:
                 print("Invalid Number")
-                choice = int(input("Choose a menu (0-6) : "))
+                choice = int(input("Choose a menu (0-5) : "))
             else:
                 break
         except ValueError:
@@ -147,14 +147,10 @@ def AddHabit():
         if Freq == i:
             Freq = Frequency[i]
     print(f"{Freq}\n")
-
-    CurrentDate = datetime.date.today()
     
     print("Habit added successfully")
     MyFile.write(f"{new_id},{Habit},{Category},{Freq},{CurrentDate},active\n")
     MyFile.close()
-
-    input("Press Enter to continue...")
 
     return
 
@@ -180,7 +176,6 @@ def DeleteHabit():
     while True:
         try:
             choice = int(input(f"Enter habit ID to delete : "))
-            found = False
             for Habit in Active:
                 if int(Habit['id']) == choice:
                     found = True
@@ -198,6 +193,104 @@ def DeleteHabit():
             break
 
     print("Habit deleted successfully!")
+
+    AccessMode = "w"
+    MyFile = open(FileName, AccessMode)
+    MyFile.write("id,name,category,frequency,created_date,status\n")
+    for Habit in Habits:
+        MyFile.write(f"{Habit['id']},{Habit['name']},{Habit['category']},{Habit['frequency']},{Habit['created_date']},{Habit['status']}\n")
+    MyFile.close()
+
+    input("Press Enter to continue...")
+    return
+
+def EditHabit():
+    FileName = "Habits.csv"
+    AccessMode = "r"
+    Habits = []
+    Categorys = ["Study", "Fitness", "Health", "Work", "Personal"]
+    Frequency = ["Daily", "Weekly"]
+    with open(FileName, AccessMode) as MyFile:
+        reader = csv.DictReader(MyFile)
+        Habits = []
+        for Habit in reader:
+            Habits.append(Habit)
+            print(f"{Habit['id']}. {Habit['name']} ({Habit['category']}) /{Habit['status']}")
+    found = False
+    while True:
+        try:
+            choice = int(input(f"Enter habit ID to edit : "))
+            found = False
+            for Habit in Habits:
+                if int(Habit['id']) == choice:
+                    found = True
+                    break
+            if not found:
+                print("Invalid ID")
+            if found:
+                break
+        except ValueError:
+            print("Invalid ID")
+
+    for Habit in Habits:
+        if int(Habit['id']) == choice:
+            name = input("Change habit name (Enter X to skip) : ")
+            while True:
+                try:
+                    if "," in name:
+                        print("Invalid name")
+                        name = input("Ener a new Habit (no commas) : ")
+                    else:
+                        break
+                except ValueError:
+                    print("Invalid name")
+            if name.upper() != "X":
+                Habit['name'] = name
+            
+            print('\nCategory:')
+            for i in range(len(Categorys)):
+                print(f"{i}. {Categorys[i]}")
+            skip = False
+            while True:
+                Category = input("Change habit category (0-4) (Enter X to skip) : ")
+                if Category.upper() == "X":
+                    skip = True
+                    break
+                try:
+                    Category = int(Category)
+                    if Category<0 or Category>4:
+                        print("Invalid number")
+                    else:
+                        break
+                except ValueError:
+                    print("Invalid number")    
+            if not skip:
+                Habit['category'] = Categorys[Category]           
+                print(f"{Category}")
+        
+            print('\nFrequency:')
+            for i in range(len(Frequency)):
+                print(f"{i}. {Frequency[i]}")
+            skip = False
+            while True:
+                Freq = input("Change habit Frequency (0-1) (Enter X to skip) : ")
+                if Freq.upper() == "X":
+                    skip = True
+                    break
+                try:
+                    Freq = int(Freq)
+                    if Freq<0 or Freq>1:
+                        print("Invalid number")
+                    else:
+                        break
+                except ValueError:
+                    print("Invalid number")
+            if not skip:
+                Habit['frequency'] = Frequency[Freq]           
+                print(f"{Freq}")
+    
+            break
+
 
     AccessMode = "w"
     MyFile = open(FileName, AccessMode)
@@ -247,7 +340,6 @@ def Calendar():
             choice = int(input("Choose a menu (0-4) : "))
             if choice<0 or choice>4:
                 print("Invalid Number")
-                choice = int(input("Choose a menu (0-4) : "))
             else:
                 break
         except ValueError:
@@ -311,6 +403,8 @@ while True:
             AddHabit()
         elif choice == 3:
             DeleteHabit()
+        elif choice == 4:
+            EditHabit()
         elif choice == 5:
             Categorys()
     if answer == 3:
