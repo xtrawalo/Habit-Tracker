@@ -10,16 +10,12 @@ def Home():
     print("=================================== \n           HABIT TRACKER            \n=================================== \n" )
     print("1. Dashboard ")
     print("2. Habits ")
-    print("3. Calendar")
-    print("4. Statistics")
-    print("5. Achievements")
-    print("6. Exit\n")
+    print("3. Exit\n")
     while True:
         try:
-            answer = int(input("Choose a menu (1-6) : "))
-            if answer<1 or answer>6:
+            answer = int(input("Choose a menu (1-3) : "))
+            if answer<1 or answer>3:
                 print("Invalid Number")
-                choice = int(input("Choose a menu (1-6) : "))
             else:
                 break
         except ValueError:
@@ -27,13 +23,62 @@ def Home():
     return answer
 
 def Dashboard():
-    print("=================================== \n             DASHBOARD              \n=================================== \n" )
+    FileName = "Habits.csv"
+    AccessMode = "r"
+    ActiveHabits = []
+    with open(FileName, AccessMode) as MyFile:
+        reader = csv.DictReader(MyFile)
+        for Habit in reader:
+            if Habit['status'] == 'active':
+                ActiveHabits.append(Habit)
+
+    FileName = "History.csv"
+    AccessMode = "r"
+    CompletedByDate = {}
+    with open(FileName, AccessMode) as MyFile:
+        reader = csv.DictReader(MyFile)
+        for Entry in reader:
+            if Entry['status'] == 'completed':
+                CompletedByDate.setdefault(Entry['date'], set()).add(Entry['habit_id'])
     
+    Today = str(CurrentDate)
+    TotalHabits = len(ActiveHabits)
+    CompletedToday = 0
+    DueToday = []
+    for Habit in ActiveHabits:
+        if Habit['id'] in CompletedByDate.get(Today, set()):
+            CompletedToday += 1
+        else:
+            DueToday.append(Habit)
+    
+    Percentage = int((CompletedToday / TotalHabits) * 100) if TotalHabits > 0 else 0
+
+    ActiveIDs = {Habit['id'] for Habit in ActiveHabits}
+    Streak = 0
+    Day = CurrentDate
+    while True:
+        DayStr = str(Day)
+        DoneThatDay = CompletedByDate.get(DayStr, set())
+        if ActiveIDs and ActiveIDs.issubset(DoneThatDay):
+            Streak += 1
+            Day = Day - datetime.timedelta(days=1)
+        else:
+            break
+
+    print("=================================== \n             DASHBOARD              \n=================================== \n" )
     print(f"Today: {CurrentDate}")
-    print("Quick Stats")
+    print(f"Progress: {CompletedToday}/{TotalHabits} ({Percentage}%)")
+    print(f"Streak : 🔥 {Streak} days\n")
+    print("---------")
+    if DueToday:
+        for Habit in DueToday:
+            print(f"□ {Habit['name']}")
+    else:
+        print("All Habits Completed !")
     
     print("1. Mark Habit Complete")
-    print("O. Return\n")
+    print("0. Return\n")
+
     while True:
         try:
             choice = int(input("Choose a menu (0-1) : "))
@@ -46,6 +91,100 @@ def Dashboard():
     
     return choice
 
+def Complete():
+    FileName = "Habits.csv"
+    AccessMode = "r"
+    Active = []
+    with open (FileName, AccessMode) as MyFile:
+        reader = csv.DictReader(MyFile)
+        for Habit in reader:
+            if Habit['status'] == 'active':
+                Active.append(Habit)
+                print(f"{Habit['id']}. {Habit['name']} ({Habit['category']})")
+    if not Active:
+        print("There are no habits currently")
+        input("Press Enter to continue...")
+        return
+    
+    found  = False
+    while True:
+        try:
+            choice = int(input("Enter habit ID to mark complete : "))
+            for Habit in Active:
+                if int(Habit['id']) == choice:
+                    found = True
+                    break
+            if not found:
+                print("Invalid ID")
+            else:
+                break
+        except ValueError:
+            print("Invalid ID")
+    
+    already_done = False
+    FileName = "History.csv"
+    AccessMode = "r"
+    with open(FileName, AccessMode) as MyFile:
+        reader = csv.DictReader(MyFile)
+        for Entry in reader:
+            if Entry['habit_id'] == str(choice) and Entry['date'] == str(CurrentDate) and Entry['status'] == 'completed':
+                already_done = True
+                break
+
+    if already_done:
+        print("Habit already marked complete today!")
+        input("Press Enter to continue...")
+        return
+    
+    AccessMode = "a"
+    MyFile = open(FileName, AccessMode)
+    MyFile.write(f"{choice},{CurrentDate},completed\n")
+    MyFile.close()
+
+    print("Habit marked complete!")
+    input("Press Enter to continue...")
+    return
+
+def History():
+    FileName = 'Habits.csv'
+    AccessMode = 'r'
+    HabitsDates = {}
+    with open(FileName, AccessMode) as MyFile:
+        FileData = csv.DictReader(MyFile)
+        for Habit in FileData:
+            HabitsDates[Habit['id']] = Habit['created_date']
+
+    FileName = 'History.csv'
+    AccessMode = 'r'
+    CompletedHabits = {}
+    with open(FileName, AccessMode) as MyFile:
+        FileData = csv.DictReader(MyFile)
+        for Habit in FileData:
+            if Habit['status'] == "completed":
+                CompletedHabits.setdefault(Habit['habit_id'], set()).add(Habit['date'])
+
+    History = []
+    for habit_id, created_date in HabitsDates.items():
+        created = datetime.datetime.strptime(created_date, "%Y-%m-%d").date()
+        days_since_created = (CurrentDate - created).days
+
+        for offset in range(days_since_created + 1):
+            day = created + datetime.timedelta(days=offset)
+            day_str = day.strftime("%Y-%m-%d")
+
+            if habit_id in CompletedHabits and day_str in CompletedHabits[habit_id]:
+                status = "completed"
+            else:
+                status = "missing"
+
+            History.append({
+                "habit_id": habit_id,
+                "date": day_str,
+                "status": status
+            })
+
+    return History
+
 def Habits():
     print("=================================== \n              HABITS                \n=================================== \n" )
     print("1. All Habits ")
@@ -57,9 +196,8 @@ def Habits():
     while True:
         try:
             choice = int(input("Choose a menu (0-5) : "))
-            if choice<0 or choice>6:
+            if choice<0 or choice>5:
                 print("Invalid Number")
-                choice = int(input("Choose a menu (0-5) : "))
             else:
                 break
         except ValueError:
@@ -116,10 +254,9 @@ def AddHabit():
         print(f"{i}. {Habits[i]}")
     while True:
         try:
-            Category = int(input("Choose a category(0-5) : "))
-            if Category<0 or Category>5:
+            Category = int(input("Choose a category(0-4) : "))
+            if Category<0 or Category>4:
                 print("Invalid number")
-                Category = input("Choose a category(0-5) : ")
             else:
                 break
         except:
@@ -137,7 +274,6 @@ def AddHabit():
             Freq = int(input("Choose a Frequency(0-1) : "))
             if Freq<0 or Freq>1:
                 print("Invalid number")
-                Freq = int(input("Choose a Frequency(0-1) : "))
             else:
                 break
         except:
@@ -328,75 +464,18 @@ def Categorys():
     input("Press Enter to continue...")
     return
 
-def Calendar():
-    print("=================================== \n             CALENDAR               \n=================================== \n" )
-    print("1. Daily View ")
-    print("2. Monthly View ")
-    print("3. Heatmap")
-    print("4. History")
-    print("0. Return\n")
-    while True:
-        try:
-            choice = int(input("Choose a menu (0-4) : "))
-            if choice<0 or choice>4:
-                print("Invalid Number")
-            else:
-                break
-        except ValueError:
-            print("Invalid Number")
-    return choice
-
-def Statistics():
-    print("=================================== \n            Statistics              \n=================================== \n" )
-    print("1. Completion Rate ")
-    print("2. Weekly Progress ")
-    print("3. Monthly Progress")
-    print("4. Streak History")
-    print("5. Best Habits")
-    print("0. Return\n")
-    while True:
-        try:
-            choice = int(input("Choose a menu (0-5) : "))
-            if choice<0 or choice>5:
-                print("Invalid Number")
-                choice = int(input("Choose a menu (0-5) : "))
-            else:
-                break
-        except ValueError:
-            print("Invalid Number")
-    return choice
-
-def Achievements():
-    print("=================================== \n            Achievements           \n=================================== \n" )
-    print("1. Badges ")
-    print("2. Milestones ")
-    print("3. Longest Streak")
-    print("4. Total Completed Habits")
-    print("5. Level")
-    print("0. Return\n")    
-    while True:
-        try:
-            choice = int(input("Choose a menu (0-5) : "))
-            if choice<0 or choice>5:
-                print("Invalid Number")
-                choice = int(input("Choose a menu (0-5) : "))
-            else:
-                break
-        except ValueError:
-            print("Invalid Number")
-    return choice
-
 answer = Home()
-print(answer)
 while True:
     if answer == 1:
         choice = Dashboard()
         if choice == 0:
-            Home()
-    if answer == 2:
+            answer = Home()
+        elif choice == 1:
+            Complete()
+    elif answer == 2:
         choice = Habits ()
         if choice == 0:
-            Home()
+            answer = Home()
         elif choice == 1:
             AllHabits()
         elif choice == 2:
@@ -407,17 +486,5 @@ while True:
             EditHabit()
         elif choice == 5:
             Categorys()
-    if answer == 3:
-        choice = Calendar()
-        if choice == 0:
-            Home()
-    if answer == 4:
-        choice = Statistics()
-        if choice == 0:
-            Home()
-    if answer == 5:
-        choice = Achievements()
-        if choice == 0:
-            Home()
-    if answer == 6:
+    elif answer == 3:
         break
