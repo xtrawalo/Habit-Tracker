@@ -282,7 +282,7 @@ def AddHabit():
     MyFile = open(FileName,AccessMode)
     Habits = ["Study", "Fitness", "Health", "Work", "Personal"]
     Frequency = ["Daily", "Weekly"]
-    Habit = input("Ener a new Habit : ")
+    Habit = input("Enter a new Habit : ")
     while True:
         try:
             if "," in Habit:
@@ -395,14 +395,19 @@ def EditHabit():
         Habits = []
         for Habit in reader:
             Habits.append(Habit)
-            print(f"{Habit['id']}. {Habit['name']} ({Habit['category']}) /{Habit['status']}")
+            if Habit['status'] == 'active':
+                print(f"{Habit['id']}. {Habit['name']} ({Habit['category']})")
+    if not any(Habit['status'] == 'active' for Habit in Habits):
+        print("There are no habits currently")
+        input("Press Enter to continue...")
+        return
     found = False
     while True:
         try:
             choice = int(input(f"Enter habit ID to edit : "))
             found = False
             for Habit in Habits:
-                if int(Habit['id']) == choice:
+                if int(Habit['id']) == choice and Habit['status'] == 'active':
                     found = True
                     break
             if not found:
