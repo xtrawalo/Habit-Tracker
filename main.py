@@ -1,3 +1,4 @@
+import os
 import csv
 import datetime
 
@@ -5,6 +6,13 @@ answer = 0
 choice = 0
 CurrentDate = datetime.date.today()
 
+def EnsureFiles():
+    if not os.path.exists("Habits.csv"):
+        with open("Habits.csv", "w") as MyFile:
+            MyFile.write("id,name,category,frequency,created_date,status\n")
+    if not os.path.exists("History.csv"):
+        with open("History.csv", "w") as MyFile:
+            MyFile.write("habit_id,date,status\n")
 
 def Home():
     print("=================================== \n           HABIT TRACKER            \n=================================== \n" )
@@ -41,25 +49,32 @@ def Dashboard():
             if Entry['status'] == 'completed':
                 CompletedByDate.setdefault(Entry['date'], set()).add(Entry['habit_id'])
     
+    def IsSatisfiedOn(Habit, Day):
+        if Habit.get('frequency') == 'Weekly':
+            return any(
+                Habit['id'] in CompletedByDate.get(str(Day - datetime.timedelta(days=d)), set())
+                for d in range(7)
+            )
+        return Habit['id'] in CompletedByDate.get(str(Day), set())
     Today = str(CurrentDate)
     TotalHabits = len(ActiveHabits)
     CompletedToday = 0
     DueToday = []
     for Habit in ActiveHabits:
-        if Habit['id'] in CompletedByDate.get(Today, set()):
+        if IsSatisfiedOn(Habit, CurrentDate):
             CompletedToday += 1
         else:
             DueToday.append(Habit)
     
     Percentage = int((CompletedToday / TotalHabits) * 100) if TotalHabits > 0 else 0
 
-    ActiveIDs = {Habit['id'] for Habit in ActiveHabits}
     Streak = 0
     Day = CurrentDate
+    TodayDone = ActiveHabits and all(IsSatisfiedOn(Habit, CurrentDate) for Habit in ActiveHabits)
+    if not TodayDone:
+        Day = CurrentDate - datetime.timedelta(days = 1)
     while True:
-        DayStr = str(Day)
-        DoneThatDay = CompletedByDate.get(DayStr, set())
-        if ActiveIDs and ActiveIDs.issubset(DoneThatDay):
+        if ActiveHabits and all(IsSatisfiedOn(Habit, Day) for Habit in ActiveHabits):
             Streak += 1
             Day = Day - datetime.timedelta(days=1)
         else:
@@ -137,9 +152,11 @@ def Complete():
         return
     
     AccessMode = "a"
-    MyFile = open(FileName, AccessMode)
-    MyFile.write(f"{choice},{CurrentDate},completed\n")
-    MyFile.close()
+    if not os.path.exists(FileName) or os.path.getsize(FileName) == 0:
+        with open(FileName, "w") as MyFile:
+            MyFile.write("habit_id,date,status\n")
+    with open(FileName, AccessMode) as MyFile:
+        MyFile.write(f"{choice},{CurrentDate},completed\n")
 
     print("Habit marked complete!")
     input("Press Enter to continue...")
@@ -185,6 +202,32 @@ def History():
 
     return History
 
+def ShowHistory():
+    FileName = "Habits.csv"
+    with open(FileName, "r") as MyFile:
+        reader = csv.DictReader(MyFile)
+        NameById = {Habit['id']: Habit['name'] for Habit in reader}
+
+    Entries = History()
+    if not Entries:
+        print("There is no history yet")
+        input("Press Enter to continue...")
+        return
+
+    ByHabit = {}
+    for Entry in Entries:
+        ByHabit.setdefault(Entry['habit_id'], []).append(Entry)
+
+    print("=================================== \n              HISTORY               \n=================================== \n")
+    for habit_id, entries in ByHabit.items():
+        name = NameById.get(habit_id, f"Habit {habit_id}")
+        print(f"\n{name}:")
+        for Entry in entries:
+            mark = "✔" if Entry['status'] == "completed" else "✘"
+            print(f"  {Entry['date']}  {mark}")
+    input("\nPress Enter to continue...")
+    return
+
 def Habits():
     print("=================================== \n              HABITS                \n=================================== \n" )
     print("1. All Habits ")
@@ -192,11 +235,12 @@ def Habits():
     print("3. Delete Habit")
     print("4. Edit Habit")
     print("5. Categories")
+    print("6. History")
     print("0. Return\n")
     while True:
         try:
-            choice = int(input("Choose a menu (0-5) : "))
-            if choice<0 or choice>5:
+            choice = int(input("Choose a menu (0-6) : "))
+            if choice<0 or choice>6:
                 print("Invalid Number")
             else:
                 break
@@ -243,7 +287,7 @@ def AddHabit():
         try:
             if "," in Habit:
                 print("Invalid Habit")
-                Habit = input("Ener a new Habit (no commas) : ")
+                Habit = input("Enter a new Habit (no commas) : ")
             else:
                 break
         except:
@@ -375,7 +419,7 @@ def EditHabit():
                 try:
                     if "," in name:
                         print("Invalid name")
-                        name = input("Ener a new Habit (no commas) : ")
+                        name = input("Enter a new Habit (no commas) : ")
                     else:
                         break
                 except ValueError:
@@ -464,6 +508,7 @@ def Categorys():
     input("Press Enter to continue...")
     return
 
+EnsureFiles()
 answer = Home()
 while True:
     if answer == 1:
@@ -486,5 +531,7 @@ while True:
             EditHabit()
         elif choice == 5:
             Categorys()
+        elif choice == 6:
+            ShowHistory()
     elif answer == 3:
         break
