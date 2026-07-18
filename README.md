@@ -53,7 +53,7 @@ To Download it, check the latest Windows version from the **Releases** page.
 
 Here → https://github.com/xtrawalo/Habit-Tracker/releases/latest
 
-View the project on **Horizons** : https://horizons.hackclub.com/app/projects/6214
+View the project on **Horizons** : https://horizons.hackclub.com/projects/6214
 
 ## AI USAGE
 
