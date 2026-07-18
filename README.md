@@ -48,11 +48,17 @@ The program starts by running `EnsureFiles()`, then `Home()`. Based on the choic
 - os Module
 
 ## Installation
-To Download it check the latest Windows version from the **Releases** page.
+
+To Download it, check the latest Windows version from the **Releases** page.
+
 Here → https://github.com/xtrawalo/Habit-Tracker/releases/latest
 
+View the project on **Horizons** : https://horizons.hackclub.com/app/projects/6214
+
 ## AI USAGE
+
 This project is my own work. I used Claude only for debugging.
 
 ## Author
+
 Me : [xtrawalo](https://github.com/xtrawalo)
